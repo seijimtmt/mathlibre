@@ -1,0 +1,77 @@
+#!/bin/sh
+##
+## emacs-custom - a local hook for the live-config package
+## customizing emacs language environment
+##
+## Copyright (C) 2013 Seiji Matsumoto <matsu@johnen.shinshu-u.ac.jp>
+##
+## This program is free software; you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 3 of the License, or
+## (at your option) any later version.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Emacs_custom ()
+{
+       # Checking if package is installed
+	if [ ! -e /var/lib/dpkg/info/emacsen-common.list ]
+	then
+		return
+	fi
+
+	# using the first locale as default
+	[ -n "${LIVE_LOCALES}" ] && \
+	    _LOCALE="$(echo ${LIVE_LOCALES} | sed -e 's|,.*||g')"
+
+	echo -n " emacs_custom"
+
+	Configure_emacs_custom
+}
+
+Configure_emacs_custom ()
+{
+	_LANG_EL="/etc/emacs/site-start.d/90live-lang.el"
+	rm -f "${_LANG_EL}"
+
+	case ${_LOCALE} in
+		ja*)
+			cat > ${_LANG_EL} <<EOF
+;; for emacs-mozc
+(require 'mozc)
+(set-language-environment 'utf-8)
+(prefer-coding-system 'utf-8)
+
+(setq default-input-method "japanese-mozc")
+
+(setq its-hira-comma "，")
+(setq its-hira-period "．")
+(eval-after-load "its"
+  '(define-its-state-machine-append its-hira-map
+     (its-defrule "dhi" "でぃ")
+     (its-defrule "dhu" "でゅ")
+     (its-defrule "thi" "てぃ")
+     (its-defrule "thu" "てゅ")
+     (its-defrule "whi" "うぃ")
+     (its-defrule "whe" "うぇ")
+     (its-defrule "who" "うぉ")))
+(toggle-input-method nil)
+(setq its-enable-fullwidth-alphabet nil)
+;;
+;; for YaTeX
+;;
+(setq auto-mode-alist
+      (cons (cons "\\.tex$" 'yatex-mode) auto-mode-alist))
+(autoload 'yatex-mode "yatex" "Yet Another LaTeX mode" t)
+EOF
+			;;
+	esac
+}
+
+Emacs_custom
