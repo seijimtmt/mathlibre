@@ -23,18 +23,18 @@ echo "task-$LANGUAGE task-$LANGUAGE-desktop ibus-chewing" > config/package-lists
 #
 echo "texlive-lang-cjk auctex" > config/package-lists/lang.$LANGUAGE.tex.list.chroot
 
-#
-# for ibus
-#
-cat > config/hooks/lang.ibus.chroot << EOF
-#!/bin/sh
-gconftool --direct --config-source xml:readwrite:/etc/gconf/gconf.xml.defaults \
---type list --list-type=string \
---set /desktop/ibus/general/preload_engines [chewing]
-gconftool --direct --config-source xml:readwrite:/etc/gconf/gconf.xml.defaults \
---type list --list-type=string \
---set /desktop/ibus/general/hotkey/trigger [Control+space,Hangul,Alt+grave,Alt+Release+Alt_R,Zenkaku_Hankaku,Alt+Kanji]
-EOF
+# #
+# # for ibus
+# #
+# cat > config/hooks/lang.ibus.chroot << EOF
+# #!/bin/sh
+# gconftool --direct --config-source xml:readwrite:/etc/gconf/gconf.xml.defaults \
+# --type list --list-type=string \
+# --set /desktop/ibus/general/preload_engines [chewing]
+# gconftool --direct --config-source xml:readwrite:/etc/gconf/gconf.xml.defaults \
+# --type list --list-type=string \
+# --set /desktop/ibus/general/hotkey/trigger [Control+space,Hangul,Alt+grave,Alt+Release+Alt_R,Zenkaku_Hankaku,Alt+Kanji]
+# EOF
 
 #
 # for kseg

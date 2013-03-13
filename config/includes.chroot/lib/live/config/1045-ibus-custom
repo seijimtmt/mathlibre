@@ -1,0 +1,114 @@
+#!/bin/sh
+##
+## ibus-custom - a local hook for the live-config package
+## customizing ibus (preload_engines, trigger) with gconftool
+##
+## Copyright (C) 2013 Seiji Matsumoto <matsu@johnen.shinshu-u.ac.jp>
+##
+## This program is free software; you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 3 of the License, or
+## (at your option) any later version.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Ibus_custom ()
+{
+	if [ ! -e /var/lib/dpkg/info/ibus.list ]
+	then
+		return
+	fi
+
+	[ -n "${LIVE_LOCALES}" ] && \
+	    _LOCALES="$(echo ${LIVE_LOCALES} | sed -e 's|,| |g')"
+
+	[ -n "${LIVE_KEYBOARD_LAYOUTS}" ] && \
+	    _KEYBOARD_LAYOUTS="$(echo ${LIVE_KEYBOARD_LAYOUTS} | sed -e 's|,| |g')"
+
+	echo -n " ibus_custom"
+
+	Configure_ibus_custom
+}
+
+Configure_ibus_custom ()
+{
+	GCONFTOOL="/usr/bin/gconftool"
+	if [ ! -x "${GCONFTOOL}" ]
+	then
+		echo "${0}: E: ${GCONFTOOL} not installed"
+		return
+	fi
+
+	## setting /desktop/ibus/general/preload_engines
+
+	_PRELOAD_ENGINES=
+	for _LOCALE in ${_LOCALES}
+	do
+		case "${_LOCALE}" in
+			ja*)
+				_PRELOAD_ENGINES="${_PRELOAD_ENGINES},mozc-jp,anthy"
+				;;
+			ko*)
+				_PRELOAD_ENGINES="${_PRELOAD_ENGINES},hangul"
+				;;
+			zh_CN*)
+				_PRELOAD_ENGINES="${_PRELOAD_ENGINES},pinyin,sunpinyin,googlepinyin"
+				;;
+			zh_TW*)
+				_PRELOAD_ENGINES="${_PRELOAD_ENGINES},chewing"
+				;;
+		esac
+	done
+	# remove the first ","
+	_PRELOAD_ENGINES=$(echo "${_PRELOAD_ENGINES}" | sed -e "s|^,||")
+
+	# using gconftool
+	[ -n "${_PRELOAD_ENGINES}" ] && \
+	    ${GCONFTOOL} --direct \
+	    --config-source xml:readwrite:/etc/gconf/gconf.xml.defaults \
+	    --type list --list-type=string \
+	    --set /desktop/ibus/general/preload_engines [${_PRELOAD_ENGINES}]
+
+	## setting /desktop/ibus/general/hotkey/trigger
+
+	# default
+	_TRIGGERS_ADD='Shift+space'
+	for _KEYBOARD_LAYOUT in ${_KEYBOARD_LAYOUTS}
+	do
+		case "${_KEYBOARD_LAYOUT}" in
+			jp)
+				_TRIGGERS_ADD="${_TRIGGERS_ADD},Zenkaku_Hankaku,Alt+Kanji"
+				;;
+			kr)
+				_TRIGGERS_ADD="${_TRIGGERS_ADD},Hangul,Alt+grave,Alt+Release+Alt_R"
+				;;
+			us)
+				_TRIGGERS_ADD="${_TRIGGERS_ADD},Alt+grave,Alt+Release+Alt_R"
+				;;
+		esac
+	done
+
+	# defining triggers with removing duplicated entries
+	_TRIGGERS='Shift+space'
+	for _TRIGGER in $(echo "${_TRIGGERS_ADD}" | sed -e 's|,| |g')
+	do
+		if ! echo "${_TRIGGERS}" | grep -qs "${_TRIGGER}"
+		then
+			_TRIGGERS="${_TRIGGERS},${_TRIGGER}"
+		fi
+	done
+
+	# using gconftool
+	${GCONFTOOL} --direct --config-source \
+	    xml:readwrite:/etc/gconf/gconf.xml.defaults \
+	    --type list --list-type=string \
+	    --set /desktop/ibus/general/hotkey/trigger [${_TRIGGERS}]
+}
+
+Ibus_custom
