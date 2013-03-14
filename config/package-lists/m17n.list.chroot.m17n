@@ -1,0 +1,43 @@
+#
+#  config/package-lists/m17n.list.chroot
+#  - package list for m17n
+
+# Simplified Chinese
+task-chinese-s
+task-chinese-s-desktop
+ibus-pinyin
+ibus-sunpinyin
+ibus-googlepinyin
+
+# Traditonal Chinese
+task-chinese-t
+task-chinese-t-desktop
+ibus-chewing
+
+# Japanese
+task-japanese
+task-japanese-desktop
+ibus-mozc
+ibus-anthy
+emacs-mozc
+fonts-takao
+xdvik-ja
+yatex
+
+# Khmer
+task-khmer
+task-khmer-desktop
+fonts-khmeros
+khmerconverter
+libreoffice-help-km
+
+# Korean
+task-Korean
+task-Korean-desktop
+ibus-hangul
+
+# common
+texlive-lang-cjk
+auctex
+chromium-l10n
+ibus-m17n
