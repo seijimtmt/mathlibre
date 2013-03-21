@@ -1,0 +1,67 @@
+#!/bin/sh
+##
+## kseg-custom - a local hook for the live-config package
+## customizing kseg (language setting)
+##
+## Copyright (C) 2013 Seiji Matsumoto <matsu@johnen.shinshu-u.ac.jp>
+##
+## This program is free software; you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 3 of the License, or
+## (at your option) any later version.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Kseg_custom ()
+{
+       # Checking if package is installed
+	if [ ! -e /var/lib/dpkg/info/kseg.list ]
+	then
+		return
+	fi
+
+	# using the first locale as default
+	[ -n "${LIVE_LOCALES}" ] && \
+	    _LOCALE="$(echo ${LIVE_LOCALES} | sed -e 's|,.*||g')"
+
+	echo -n " kseg_cuctom"
+
+	Configure_kseg_custom
+}
+
+Configure_kseg_custom ()
+{
+	DOTKSEG_SYSTEM="/etc/skel/.kseg"
+	DOTKSEG="/home/${LIVE_USERNAME}/.kseg"
+
+	if [ ! -e "${DOTKSEG}" ]
+	then
+		if [ -e "${DOTKSEG_SYSTEM}" ]
+		then
+			cp "${DOTKSEG_SYSTEM}" "${DOTKSEG}"
+		else
+			echo 'Language = kseg_en.qm' > "${DOTKSEG}"
+		fi
+		chown ${LIVE_USERNAME}:${LIVE_USERNAME} "${DOTKSEG}"
+	fi
+
+	case "${_LOCALE}" in
+		ja*)
+			sed -i -e 's|^\(Language *=\).*$|\1 kseg_ja.qm|' "${DOTKSEG}"
+			;;
+		zh*)
+			sed -i -e 's|^\(Language *=\).*$|\1 kseg_zh.qm|' "${DOTKSEG}"
+			;;
+		*)
+			sed -i -e 's|^\(Language *=\).*$|\1 kseg_en.qm|' "${DOTKSEG}"
+			;;
+	esac
+}
+
+Kseg_custom
