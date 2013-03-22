@@ -1,0 +1,94 @@
+#!/bin/sh
+##
+## livecfg-custom.binary - a binary-stage local hook for Live Build Scripts
+## creating customized "binary/BOOTLOADER/live.cfg".
+## For customization, install task-LANGUAGE packages and edit entries.
+##
+## Copyright (C) 2013 Seiji Matsumoto <matsu@johnen.shinshu-u.ac.jp>
+##
+## This program is free software; you can redistribute it and/or modify
+## it under the terms of the GNU General Public License as published by
+## the Free Software Foundation; either version 3 of the License, or
+## (at your option) any later version.
+##
+## This program is distributed in the hope that it will be useful,
+## but WITHOUT ANY WARRANTY; without even the implied warranty of
+## MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+## GNU General Public License for more details.
+##
+## You should have received a copy of the GNU General Public License
+## along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+# defaults
+DEFAULT_LINUX="/live/vmlinuz"
+DEFAULT_INITRD="/live/initrd.img"
+DEFAULT_APPEND="boot=live config quiet splash persistence noeject live-config.utc=no"
+INFODIR="chroot/var/lib/dpkg/info"
+
+[ "$(echo ${LB_LINUX_FLAVOURS} | wc -w)" -gt "1" ] \
+	&& echo "${0} E: multi-flavour not supported" && exit 1
+
+for _BOOTLOADER in extlinux isolinux pxelinux syslinux
+do
+	_LIVECFG="binary/${_BOOTLOADER}/live.cfg"
+	[ ! -e "${_LIVECFG}" ] && continue || mv "${_LIVECFG}" "${_LIVECFG}.backup"
+	echo "${0}: creating ${_LIVECFG} ..."
+
+	[ -e "${INFODIR}/task-chinese-s.list" ] && cat >> "${_LIVECFG}" <<EOF
+label live-chinese-s
+	menu label ^Live Chinese (Simplified)
+	linux ${DEFAULT_LINUX}
+	initrd ${DEFAULT_INITRD}
+	append ${DEFAULT_APPEND} live-config.locales=zh_CN.UTF-8 live-config.timezone=Asia/Shanghai live-config.keyboard-model=us live-config.keyboard-layouts=us
+
+EOF
+	[ -e "${INFODIR}/task-chinese-t.list" ] && cat >> "${_LIVECFG}" <<EOF
+label live-chinese-t
+	menu label ^Live Chinese (Traditional)
+	linux ${DEFAULT_LINUX}
+	initrd ${DEFAULT_INITRD}
+	append ${DEFAULT_APPEND} live-config.locales=zh_TW.UTF-8 live-config.timezone=Asia/Taipei live-config.keyboard-model=us live-config.keyboard-layouts=us
+
+EOF
+	cat >> "${_LIVECFG}" <<EOF
+label live-english-us
+	menu label ^Live English (US)
+	menu default
+	linux ${DEFAULT_LINUX}
+	initrd ${DEFAULT_INITRD}
+	append ${DEFAULT_APPEND} live-config.locales=en_US.UTF-8 live-config.timezone=America/New_York live-config.keyboard-model=us live-config.keyboard-layouts=us
+
+EOF
+	[ -e "${INFODIR}/task-japanese.list" ] && cat >> "${_LIVECFG}" <<EOF
+label live-japanese
+	menu label ^Live Japanese
+	linux ${DEFAULT_LINUX}
+	initrd ${DEFAULT_INITRD}
+	append ${DEFAULT_APPEND} live-config.locales=ja_JP.UTF-8 live-config.timezone=Asia/Tokyo live-config.keyboard-model=jp106 live-config.keyboard-layouts=jp,us
+
+EOF
+	[ -e "${INFODIR}/task-khmer.list" ] && cat >> "${_LIVECFG}" <<EOF
+label live-khmer
+	menu label ^Live Khmer
+	linux ${DEFAULT_LINUX}
+	initrd ${DEFAULT_INITRD}
+	append ${DEFAULT_APPEND} live-config.locales=km_KH.UTF-8 live-config.timezone=Asia/Phnom_Penh live-config.keyboard-model=us live-config.keyboard-layouts=us
+
+EOF
+	[ -e "${INFODIR}/task-korean.list" ] && cat >> "${_LIVECFG}" <<EOF
+label live-korean
+	menu label ^Live Korean
+	linux ${DEFAULT_LINUX}
+	initrd ${DEFAULT_INITRD}
+	append ${DEFAULT_APPEND} live-config.locales=ko_KR.UTF-8 live-config.timezone=Asia/Seoul live-config.keyboard-model=kr106 live-config.keyboard-layouts=kr,us
+
+EOF
+	cat >> "${_LIVECFG}" <<EOF
+label live-failsafe
+	menu label ^Live (failsafe)
+	linux ${DEFAULT_LINUX}
+	initrd ${DEFAULT_INITRD}
+	append boot=live config memtest noapic noapm nodma nomce nolapic nomodeset nosmp nosplash vga=normal
+EOF
+
+done

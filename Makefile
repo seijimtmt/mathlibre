@@ -22,7 +22,7 @@ build: config
 #	ls -l binary*.iso >> iso.ls-l
 
 
-clean:
+clean: clean-m17n
 	sudo lb clean
 	rm -f config/hooks/lang.*.chroot
 	rm -f config/package-lists/lang.*.list.chroot
@@ -62,3 +62,11 @@ tw: config-tw
 	sudo lb build
 	ls -l binary*.iso >> iso.ls-l
 
+EXTRAFILES = config/hooks/livecfg-custom.binary \
+	config/package-lists/m17n.list.chroot
+m17n: config
+	for i in $(EXTRAFILES) ; do cp $${i}.m17n $${i} ; done
+	sudo lb build
+	ls -l binary*.iso >> iso.ls-l
+clean-m17n:
+	for i in $(EXTRAFILES) ; do rm -f $${i} ; done
